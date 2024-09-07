@@ -14,11 +14,9 @@ import (
 
 // Entrypoint
 func Handler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Handler")
 	routes().ServeHTTP(w, r)
 }
-func WriteJSON(w http.ResponseWriter, status int, data any, headers ...http.Header) error {
-	log.Println("WriteJSON")
+func writeJSON(w http.ResponseWriter, status int, data any, headers ...http.Header) error {
 	out, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -39,8 +37,20 @@ func WriteJSON(w http.ResponseWriter, status int, data any, headers ...http.Head
 
 	return nil
 }
-func ReadJSON(w http.ResponseWriter, r *http.Request, data any) error {
-	log.Println("ReadJSON")
+func errorJSON(w http.ResponseWriter, err error, status ...int) error {
+	statusCode := http.StatusBadRequest
+
+	if len(status) > 0 {
+		statusCode = status[0]
+	}
+	var payload jsonResponse
+
+	payload.Error = true
+	payload.Message = err.Error()
+
+	return writeJSON(w, statusCode, payload)
+}
+func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
 	maxBytes := 1024 * 1024 // 1 mb
 
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
@@ -70,7 +80,6 @@ type jsonResponse struct {
 }
 
 func routes() http.Handler {
-	log.Println("routes")
 	mux := chi.NewRouter()
 
 	//specify who is allowed to connect
@@ -86,16 +95,32 @@ func routes() http.Handler {
 
 	mux.Post("/", handleResult)
 	mux.Get("/", handleResult)
+	mux.Post("/result", generateResult)
 
 	return mux
 }
 func handleResult(w http.ResponseWriter, r *http.Request) {
-	log.Println("handleResult")
 	var result jsonResponse
 	result.Error = false
 	result.Message = "success"
 	result.Data = map[string]string{
 		"message": "Hello World",
 	}
-	WriteJSON(w, http.StatusOK, result)
+	writeJSON(w, http.StatusOK, result)
+}
+func generateResult(w http.ResponseWriter, r *http.Request) {
+	var numbers []int32
+	err := readJSON(w, r, &numbers)
+	if err != nil {
+		errorJSON(w, err)
+	}
+	if len(numbers) == 0 {
+		errorJSON(w, errors.New("numbers must not be empty"))
+		return
+	}
+	var result int32
+	for _, n := range numbers {
+		result += n
+	}
+	writeJSON(w, http.StatusOK, result)
 }
