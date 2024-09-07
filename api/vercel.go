@@ -6,16 +6,16 @@ import (
 	"io"
 	"log"
 	"net/http"
+
+	gochi "github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 )
 
 // Entrypoint
 func Handler(w http.ResponseWriter, r *http.Request) {
 	//app.ServeHTTP(w, r)
-	var payload jsonResponse
-
-	payload.Error = true
-	payload.Message = "Darsh Bhutiya"
-	WriteJSON(w, http.StatusOK, payload)
+	routes().ServeHTTP(w, r)
 }
 func WriteJSON(w http.ResponseWriter, status int, data any, headers ...http.Header) error {
 	out, err := json.Marshal(data)
@@ -66,4 +66,33 @@ type jsonResponse struct {
 	Error   bool   `json:"error"`
 	Message string `json:"message"`
 	Data    any    `json:"data,omitempty"`
+}
+
+func routes() http.Handler {
+	mux := chi.NewRouter()
+
+	//specify who is allowed to connect
+	mux.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
+	mux.Use(gochi.Heartbeat("/ping"))
+
+	mux.Post("/", handleResult)
+	mux.Get("/", handleResult)
+
+	return mux
+}
+func handleResult(w http.ResponseWriter, r *http.Request) {
+	var result jsonResponse
+	result.Error = false
+	result.Message = "success"
+	result.Data = map[string]string{
+		"message": "Hello World",
+	}
+	WriteJSON(w, http.StatusOK, result)
 }
