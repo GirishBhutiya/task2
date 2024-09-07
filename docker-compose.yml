@@ -1,0 +1,7 @@
+services:
+  server:
+    build:
+      dockerfile: ./Dockerfile
+    container_name: task1
+    ports:
+      - "8080:8080"
