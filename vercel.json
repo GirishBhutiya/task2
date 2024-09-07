@@ -1,0 +1,18 @@
+{
+    "github": {
+      "silent": true
+    },
+    "trailingSlash": false,
+    "rewrites": [
+      {
+        "source": "/(.*)",
+        "destination": "/api/vercel.go"
+      }
+    ],
+    "functions": {
+      "api/*.go": {
+      }
+    },
+    "regions": ["bru1"]
+  }
+  
