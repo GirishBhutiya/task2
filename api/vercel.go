@@ -14,10 +14,11 @@ import (
 
 // Entrypoint
 func Handler(w http.ResponseWriter, r *http.Request) {
-	//app.ServeHTTP(w, r)
+	log.Println("Handler")
 	routes().ServeHTTP(w, r)
 }
 func WriteJSON(w http.ResponseWriter, status int, data any, headers ...http.Header) error {
+	log.Println("WriteJSON")
 	out, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -39,7 +40,7 @@ func WriteJSON(w http.ResponseWriter, status int, data any, headers ...http.Head
 	return nil
 }
 func ReadJSON(w http.ResponseWriter, r *http.Request, data any) error {
-
+	log.Println("ReadJSON")
 	maxBytes := 1024 * 1024 // 1 mb
 
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
@@ -69,6 +70,7 @@ type jsonResponse struct {
 }
 
 func routes() http.Handler {
+	log.Println("routes")
 	mux := chi.NewRouter()
 
 	//specify who is allowed to connect
@@ -88,6 +90,7 @@ func routes() http.Handler {
 	return mux
 }
 func handleResult(w http.ResponseWriter, r *http.Request) {
+	log.Println("handleResult")
 	var result jsonResponse
 	result.Error = false
 	result.Message = "success"
