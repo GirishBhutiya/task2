@@ -112,8 +112,8 @@ func generateResult(w http.ResponseWriter, r *http.Request) {
 	var numbers []int32
 	err := readJSON(w, r, &numbers)
 	if err != nil {
-		if err == io.EOF {
-			errorJSON(w, errors.New("please provide proper input json format like [1,2,3]"))
+		if err.Error() == "unexpected EOF" {
+			errorJSON(w, errors.New("please provide proper input json format like [1,2,3] in the request body"), http.StatusBadRequest)
 			return
 		}
 		errorJSON(w, err)
