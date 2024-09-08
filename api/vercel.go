@@ -112,7 +112,12 @@ func generateResult(w http.ResponseWriter, r *http.Request) {
 	var numbers []int32
 	err := readJSON(w, r, &numbers)
 	if err != nil {
+		if err == io.EOF {
+			errorJSON(w, errors.New("please provide proper input json format like [1,2,3]"))
+			return
+		}
 		errorJSON(w, err)
+		return
 	}
 	if len(numbers) == 0 {
 		errorJSON(w, errors.New("numbers must not be empty"))
